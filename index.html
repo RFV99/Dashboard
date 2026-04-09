@@ -257,71 +257,39 @@
 
   <!-- Tabs -->
   <div class="tabs">
-    <button class="tab active" onclick="switchTab('bonares',this)">Bonares</button>
-    <button class="tab" onclick="switchTab('globales',this)">Globales</button>
-    <button class="tab" onclick="switchTab('bopreales',this)">Bopreales</button>
-    <button class="tab" onclick="switchTab('lecaps',this)">LECAPS</button>
+    <button class="tab active" onclick="switchTab('harddollar',this)">Hard Dollar</button>
+    <button class="tab" onclick="switchTab('capitalizables',this)">Capitalizables</button>
     <button class="tab" onclick="switchTab('pesos',this)">Tasa fija $</button>
     <button class="tab" onclick="switchTab('curvas',this)">Curvas</button>
   </div>
 
-  <div class="panel active" id="panel-bonares">
-    <div class="tbl-wrap"><table id="tbl-bonares"><thead><tr>
-      <th onclick="sortTable('bonares',0)">Ticker ↕</th>
-      <th onclick="sortTable('bonares',1)">Precio ↕</th>
-      <th onclick="sortTable('bonares',2)">TIR e.a. ↕</th>
-      <th onclick="sortTable('bonares',3)">TNA ↕</th>
-      <th onclick="sortTable('bonares',4)">Mac. Dur. ↕</th>
-      <th onclick="sortTable('bonares',5)">Mod. Dur. ↕</th>
-      <th onclick="sortTable('bonares',6)">Convex. ↕</th>
-      <th onclick="sortTable('bonares',7)">Val. Téc. ↕</th>
-      <th onclick="sortTable('bonares',8)">V. Res. ↕</th>
-      <th onclick="sortTable('bonares',9)">Paridad ↕</th>
-    </tr></thead><tbody id="tbody-bonares"></tbody></table></div>
+  <div class="panel active" id="panel-harddollar">
+    <div class="tbl-wrap"><table id="tbl-harddollar"><thead><tr>
+      <th onclick="sortTable('harddollar',0)">Ticker ↕</th>
+      <th onclick="sortTable('harddollar',1)">Precio ↕</th>
+      <th onclick="sortTable('harddollar',2)">TIR e.a. ↕</th>
+      <th onclick="sortTable('harddollar',3)">TNA ↕</th>
+      <th onclick="sortTable('harddollar',4)">Mac. Dur. ↕</th>
+      <th onclick="sortTable('harddollar',5)">Mod. Dur. ↕</th>
+      <th onclick="sortTable('harddollar',6)">Convex. ↕</th>
+      <th onclick="sortTable('harddollar',7)">Val. Téc. ↕</th>
+      <th onclick="sortTable('harddollar',8)">V. Res. ↕</th>
+      <th onclick="sortTable('harddollar',9)">Paridad ↕</th>
+    </tr></thead><tbody id="tbody-harddollar"></tbody></table></div>
   </div>
 
-  <div class="panel" id="panel-globales">
-    <div class="tbl-wrap"><table id="tbl-globales"><thead><tr>
-      <th onclick="sortTable('globales',0)">Ticker ↕</th>
-      <th onclick="sortTable('globales',1)">Precio ↕</th>
-      <th onclick="sortTable('globales',2)">TIR e.a. ↕</th>
-      <th onclick="sortTable('globales',3)">TNA ↕</th>
-      <th onclick="sortTable('globales',4)">Mac. Dur. ↕</th>
-      <th onclick="sortTable('globales',5)">Mod. Dur. ↕</th>
-      <th onclick="sortTable('globales',6)">Convex. ↕</th>
-      <th onclick="sortTable('globales',7)">Val. Téc. ↕</th>
-      <th onclick="sortTable('globales',8)">V. Res. ↕</th>
-      <th onclick="sortTable('globales',9)">Paridad ↕</th>
-    </tr></thead><tbody id="tbody-globales"></tbody></table></div>
-  </div>
-
-  <div class="panel" id="panel-bopreales">
-    <div class="tbl-wrap"><table id="tbl-bopreales"><thead><tr>
-      <th onclick="sortTable('bopreales',0)">Ticker ↕</th>
-      <th onclick="sortTable('bopreales',1)">Precio ↕</th>
-      <th onclick="sortTable('bopreales',2)">TIR e.a. ↕</th>
-      <th onclick="sortTable('bopreales',3)">TNA ↕</th>
-      <th onclick="sortTable('bopreales',4)">Mac. Dur. ↕</th>
-      <th onclick="sortTable('bopreales',5)">Mod. Dur. ↕</th>
-      <th onclick="sortTable('bopreales',6)">Convex. ↕</th>
-      <th onclick="sortTable('bopreales',7)">Val. Téc. ↕</th>
-      <th onclick="sortTable('bopreales',8)">V. Res. ↕</th>
-      <th onclick="sortTable('bopreales',9)">Paridad ↕</th>
-    </tr></thead><tbody id="tbody-bopreales"></tbody></table></div>
-  </div>
-
-  <div class="panel" id="panel-lecaps">
-    <div class="tbl-wrap"><table id="tbl-lecaps"><thead><tr>
-      <th onclick="sortTable('lecaps',0)">Ticker ↕</th>
-      <th onclick="sortTable('lecaps',1)">Vto. ↕</th>
-      <th onclick="sortTable('lecaps',2)">Días ↕</th>
-      <th onclick="sortTable('lecaps',3)">Precio ↕</th>
-      <th onclick="sortTable('lecaps',4)">VPV ↕</th>
-      <th onclick="sortTable('lecaps',5)">TIR e.a. ↕</th>
-      <th onclick="sortTable('lecaps',6)">TNA ↕</th>
-      <th onclick="sortTable('lecaps',7)">TEM ↕</th>
-      <th onclick="sortTable('lecaps',8)">TE al plazo ↕</th>
-    </tr></thead><tbody id="tbody-lecaps"></tbody></table></div>
+  <div class="panel" id="panel-capitalizables">
+    <div class="tbl-wrap"><table id="tbl-capitalizables"><thead><tr>
+      <th onclick="sortTable('capitalizables',0)">Ticker ↕</th>
+      <th onclick="sortTable('capitalizables',1)">Vto. ↕</th>
+      <th onclick="sortTable('capitalizables',2)">Días ↕</th>
+      <th onclick="sortTable('capitalizables',3)">Precio ↕</th>
+      <th onclick="sortTable('capitalizables',4)">VPV ↕</th>
+      <th onclick="sortTable('capitalizables',5)">TIR e.a. ↕</th>
+      <th onclick="sortTable('capitalizables',6)">TNA ↕</th>
+      <th onclick="sortTable('capitalizables',7)">TEM ↕</th>
+      <th onclick="sortTable('capitalizables',8)">TE al plazo ↕</th>
+    </tr></thead><tbody id="tbody-capitalizables"></tbody></table></div>
   </div>
 
   <div class="panel" id="panel-pesos">
@@ -587,16 +555,16 @@ const LECAP_DEFS = [
   {ticker:'S30A6',vto:'2026-04-30',tLic:0.0353,vpv:127.486,dias:20},
   {ticker:'S15Y6',vto:'2026-05-15',tLic:0.026,vpv:105.178,dias:35},
   {ticker:'S29Y6',vto:'2026-05-29',tLic:0.0235,vpv:132.044,dias:49},
-  {ticker:'T30J6',vto:'2026-06-30',tLic:0.0215,vpv:144.896,dias:81},
+  {ticker:'T30J6',isBoncap:true,vto:'2026-06-30',tLic:0.0215,vpv:144.896,dias:81},
   {ticker:'S31L6',vto:'2026-07-31',tLic:0.0275,vpv:117.677,dias:112},
   {ticker:'S31G6',vto:'2026-08-31',tLic:0.025,vpv:127.064,dias:143},
   {ticker:'S30S6',vto:'2026-09-30',tLic:0.0253,vpv:117.536,dias:173},
   {ticker:'S30O6',vto:'2026-10-30',tLic:0.0255,vpv:135.278,dias:203},
   {ticker:'S30N6',vto:'2026-11-30',tLic:0.023,vpv:129.888,dias:234},
-  {ticker:'T15E7',vto:'2027-01-15',tLic:0.0205,vpv:161.104,dias:280},
-  {ticker:'T30A7',vto:'2027-04-30',tLic:0.0255,vpv:157.341,dias:385},
-  {ticker:'T31Y7',vto:'2027-05-31',tLic:0.024,vpv:151.563,dias:416},
-  {ticker:'T30J7',vto:'2027-06-30',tLic:0.0258,vpv:156.037,dias:446},
+  {ticker:'T15E7',isBoncap:true,vto:'2027-01-15',tLic:0.0205,vpv:161.104,dias:280},
+  {ticker:'T30A7',isBoncap:true,vto:'2027-04-30',tLic:0.0255,vpv:157.341,dias:385},
+  {ticker:'T31Y7',isBoncap:true,vto:'2027-05-31',tLic:0.024,vpv:151.563,dias:416},
+  {ticker:'T30J7',isBoncap:true,vto:'2027-06-30',tLic:0.0258,vpv:156.037,dias:446},
 ];
 
 // Pesos tasa fija (precio se puede actualizar si IOL disponible)
@@ -682,7 +650,7 @@ function calcLecapMetrics(precio, vpv, dias) {
 // STATE
 // ═══════════════════════════════════════════════════════════════
 let STATE = {
-  bonds: [],      // raw from data912
+  bonds: [],      // raw from data912 — used by both processBonds and processLecaps (BONCAPs)
   lecaps: [],
   bonares: [], globales: [], bopreales: [], lecapCalc: [], pesos: [],
   tcMep: {}, tcCable: {},
@@ -725,6 +693,7 @@ async function fetchAll() {
       showError('bonds: ' + bondsRaw.reason.message);
     }
 
+    // processLecaps after bonds so BONCAPs can fall back to bonds map
     if (lecapsRaw.status === 'fulfilled') {
       STATE.lecaps = lecapsRaw.value;
       processLecaps(STATE.lecaps);
@@ -743,7 +712,7 @@ async function fetchAll() {
     updateKPIs();
     renderTCStrip();
     renderAllTables();
-    if (document.getElementById('panel-curvas').classList.contains('active')) {
+    if (document.getElementById('panel-curvas') && document.getElementById('panel-curvas').classList.contains('active')) {
       buildCharts();
     }
 
@@ -835,9 +804,12 @@ function computeTC(map) {
 }
 
 function processLecaps(rawArr) {
-  const map = priceMap(rawArr);
+  const lecMap = priceMap(rawArr);
+  // BONCAPs (T-prefix) live in the bonds endpoint — merge from STATE.bonds if available
+  const bondsMap = priceMap(STATE.bonds || []);
   STATE.lecapCalc = LECAP_DEFS.map(def => {
-    const item = map[def.ticker.toUpperCase()];
+    // Try notes map first, then bonds map for BONCAPs
+    const item = lecMap[def.ticker.toUpperCase()] || bondsMap[def.ticker.toUpperCase()];
     const precio = item ? parseFloat(item.c || item.px_bid || 0) : null;
     if (!precio) return {...def, precio: null, tir:null, tem:null, tna:null, tePlazo:null, live:false};
     const {tir, tem, tna, tePlazo} = calcLecapMetrics(precio, def.vpv, def.dias);
@@ -936,21 +908,49 @@ function renderBondTable(tbodyId, data, tag) {
 }
 
 function renderAllTables() {
-  renderBondTable('tbody-bonares', STATE.bonares, 'tag-bon');
-  renderBondTable('tbody-globales', STATE.globales, 'tag-glo');
-  renderBondTable('tbody-bopreales', STATE.bopreales, 'tag-bop');
-  renderLecapTable();
+  // Hard Dollar: merge bonares + globales + bopreales, sort by TIR asc
+  const allHD = [
+    ...STATE.bonares.map(b => ({...b, _tag:'tag-bon'})),
+    ...STATE.globales.map(b => ({...b, _tag:'tag-glo'})),
+    ...STATE.bopreales.map(b => ({...b, _tag:'tag-bop'})),
+  ].sort((a, b) => (a.tir || 0) - (b.tir || 0));
+  renderHardDollarTable('tbody-harddollar', allHD);
+  renderCapitalizablesTable();
   renderPesosTable();
 }
 
-function renderLecapTable() {
-  const tbody = document.getElementById('tbody-lecaps');
+function renderHardDollarTable(tbodyId, data) {
+  const tbody = document.getElementById(tbodyId);
+  if (!tbody) return;
+  if (!data.length) { tbody.innerHTML = '<tr><td colspan="10" style="text-align:center;color:var(--muted);padding:2rem">Sin datos — presioná Actualizar</td></tr>'; return; }
+  tbody.innerHTML = data.map(b => `<tr>
+    <td><span class="ticker">${b.ticker} ${b.live ? '<span style="font-size:9px;color:var(--green)">●</span>' : ''}</span>
+        <span class="bond-name">${b.nombre}</span>
+        <span class="tag ${b._tag}">${b.grupo}</span></td>
+    <td>${f2(b.precio)}</td>
+    <td class="${b.tir < 0 ? 'neg' : (b.tir > 0.09 ? 'neg' : 'pos')}">${pct(b.tir)}</td>
+    <td>${pct(b.tna)}</td>
+    <td>${f4(b.macaulay)}</td>
+    <td>${f4(b.modified)}</td>
+    <td>${f2(b.convex)}</td>
+    <td>${f2(b.vt)}</td>
+    <td>${f2(b.vr)}</td>
+    <td class="${b.paridad < 1 ? 'neg' : 'pos'}">${f4(b.paridad)}</td>
+  </tr>`).join('');
+}
+
+function renderCapitalizablesTable() {
+  const tbody = document.getElementById('tbody-capitalizables');
   if (!tbody) return;
   const data = STATE.lecapCalc;
-  if (!data.length) { tbody.innerHTML = '<tr><td colspan="9" style="text-align:center;color:var(--muted);padding:2rem">Sin datos</td></tr>'; return; }
-  tbody.innerHTML = data.map(l => `<tr>
+  if (!data.length) { tbody.innerHTML = '<tr><td colspan="9" style="text-align:center;color:var(--muted);padding:2rem">Sin datos — presioná Actualizar</td></tr>'; return; }
+  tbody.innerHTML = data.map(l => {
+    // S = LECAP, T = BONCAP
+    const tipo = l.ticker.startsWith('T') ? 'BONCAP' : 'LECAP';
+    const tagCls = l.ticker.startsWith('T') ? 'tag-bon' : 'tag-lec';
+    return `<tr>
     <td><span class="ticker">${l.ticker} ${l.live ? '<span style="font-size:9px;color:var(--green)">●</span>' : ''}</span>
-        <span class="tag tag-lec">LECAP</span></td>
+        <span class="tag ${tagCls}">${tipo}</span></td>
     <td>${l.vto.slice(5).replace('-','/')}</td>
     <td>${l.dias}</td>
     <td>${l.precio ? f2(l.precio) : '—'}</td>
@@ -959,7 +959,8 @@ function renderLecapTable() {
     <td>${pct(l.tna)}</td>
     <td class="pos">${pct3(l.tem)}</td>
     <td>${pct(l.tePlazo)}</td>
-  </tr>`).join('');
+  </tr>`;
+  }).join('');
 }
 
 function renderPesosTable() {
@@ -1116,8 +1117,32 @@ function switchTab(id, el) {
   if (id === 'curvas') setTimeout(buildCharts, 50);
 }
 
+// Also keep old tab ids working for any residual calls
+function switchTabLegacy(id, el) { switchTab(id, el); }
+
 let sortState = {};
 function sortTable(key, colIdx) {
+  if (key === 'harddollar') {
+    // Sort the combined hard dollar state arrays
+    const hdKeys = ['ticker','precio','tir','tna','macaulay','modified','convex','vt','vr','paridad'];
+    const k = hdKeys[colIdx];
+    const dir = (sortState[key] === colIdx) ? -1 : 1;
+    sortState[key] = (sortState[key] === colIdx) ? null : colIdx;
+    [STATE.bonares, STATE.globales, STATE.bopreales].forEach(arr => {
+      arr.sort((a,b) => dir * ((a[k]||0) > (b[k]||0) ? 1 : -1));
+    });
+    renderAllTables();
+    return;
+  }
+  if (key === 'capitalizables') {
+    const capKeys = ['ticker','vto','dias','precio','vpv','tir','tna','tem','tePlazo'];
+    const k = capKeys[colIdx];
+    const dir = (sortState[key] === colIdx) ? -1 : 1;
+    sortState[key] = (sortState[key] === colIdx) ? null : colIdx;
+    STATE.lecapCalc.sort((a,b) => dir * ((a[k]||0) > (b[k]||0) ? 1 : -1));
+    renderAllTables();
+    return;
+  }
   const data = key === 'bonares' ? STATE.bonares : key === 'globales' ? STATE.globales : key === 'bopreales' ? STATE.bopreales : [];
   if (!data.length) return;
   const dir = (sortState[key] === colIdx) ? -1 : 1;
