@@ -610,15 +610,16 @@ const PESOS_DEFS = [
 ];
 
 // TC Implícitos — tickers ARS y USD para computar MEP/Cable
+// TC Implícitos — data912 format: "AL30" (ARS), "AL30D" (USD), "AL30C" (cable)
 const TC_PAIRS = [
-  {nombre:'AL30', arsD:'AL30-0001-C-CT-ARS', usdD:'AL30D-0001-C-CT-USD', arsC:'AL30-0001-C-CT-ARS', usdC:'AL30C-0001-C-CT-EXT'},
-  {nombre:'GD30', arsD:'GD30-0001-C-CT-ARS', usdD:'GD30D-0001-C-CT-USD', arsC:'GD30-0001-C-CT-ARS', usdC:'GD30C-0001-C-CT-EXT'},
-  {nombre:'AL35', arsD:'AL35-0001-C-CT-ARS', usdD:'AL35D-0001-C-CT-USD', arsC:'AL35-0001-C-CT-ARS', usdC:'AL35C-0001-C-CT-EXT'},
-  {nombre:'GD35', arsD:'GD35-0001-C-CT-ARS', usdD:'GD35D-0001-C-CT-USD', arsC:'GD35-0001-C-CT-ARS', usdC:'GD35C-0001-C-CT-EXT'},
-  {nombre:'AL41', arsD:'AL41-0001-C-CT-ARS', usdD:'AL41D-0001-C-CT-USD', arsC:'AL41-0001-C-CT-ARS', usdC:'AL41C-0001-C-CT-EXT'},
-  {nombre:'GD41', arsD:'GD41-0001-C-CT-ARS', usdD:'GD41D-0001-C-CT-USD', arsC:'GD41-0001-C-CT-ARS', usdC:'GD41C-0001-C-CT-EXT'},
-  {nombre:'AE38', arsD:'AE38-0001-C-CT-ARS', usdD:'AE38D-0001-C-CT-USD', arsC:'AE38-0001-C-CT-ARS', usdC:'AE38C-0001-C-CT-EXT'},
-  {nombre:'GD46', arsD:'GD46-0001-C-CT-ARS', usdD:'GD46D-0001-C-CT-USD', arsC:'GD46-0001-C-CT-ARS', usdC:'GD46C-0001-C-CT-EXT'},
+  {nombre:'AL30', ars:'AL30', usd:'AL30D', ext:'AL30C'},
+  {nombre:'GD30', ars:'GD30', usd:'GD30D', ext:'GD30C'},
+  {nombre:'AL35', ars:'AL35', usd:'AL35D', ext:'AL35C'},
+  {nombre:'GD35', ars:'GD35', usd:'GD35D', ext:'GD35C'},
+  {nombre:'AL41', ars:'AL41', usd:'AL41D', ext:'AL41C'},
+  {nombre:'GD41', ars:'GD41', usd:'GD41D', ext:'GD41C'},
+  {nombre:'AE38', ars:'AE38', usd:'AE38D', ext:'AE38C'},
+  {nombre:'GD46', ars:'GD46', usd:'GD46D', ext:'GD46C'},
 ];
 
 // ═══════════════════════════════════════════════════════════════
@@ -761,24 +762,25 @@ async function fetchAll() {
 // ═══════════════════════════════════════════════════════════════
 
 function priceMap(rawArr) {
-  // data912 returns array of {symbol, last, bid, ask, ...}
+  // data912 fields: symbol, c (close), px_bid, px_ask, pct_change, v
+  // Tickers: "AE38" (ARS), "AE38D" (USD), "AE38C" (cable/EXT)
   const map = {};
   if (!Array.isArray(rawArr)) return map;
   for (const item of rawArr) {
-    const sym = (item.symbol || item.ticker || item.Symbol || '').toUpperCase();
+    const sym = (item.symbol || item.ticker || '').toUpperCase().trim();
     if (sym) map[sym] = item;
   }
   return map;
 }
 
 function getPrice(map, ticker) {
-  // data912 uses tickers like "AL30D", "GD30D" etc (no suffix)
-  const variants = [ticker, ticker.replace('D',''), ticker + 'D'];
-  for (const v of variants) {
-    const item = map[v.toUpperCase()];
-    if (item) {
-      return parseFloat(item.last ?? item.close ?? item.price ?? 0) || null;
-    }
+  // data912 price field is 'c' (close). px_bid/px_ask also available.
+  // Our BOND_DEFS use tickers with 'D' suffix for USD (e.g. AL30D, GD30D)
+  // data912 also uses 'D' suffix for USD bonds — direct match
+  const item = map[ticker.toUpperCase()];
+  if (item) {
+    const p = parseFloat(item.c ?? item.px_bid ?? item.px_ask ?? 0);
+    return p > 0 ? p : null;
   }
   return null;
 }
@@ -815,15 +817,18 @@ function processBonds(rawArr) {
 
 function computeTC(map) {
   STATE.tcMep = {}; STATE.tcCable = {};
+  // data912 field 'c' = close price
   for (const pair of TC_PAIRS) {
-    const arsPrice = (map[pair.arsD] && parseFloat(map[pair.arsD].last)) || null;
-    const usdPrice = (map[pair.usdD] && parseFloat(map[pair.usdD].last)) || null;
-    // If data912 returns pesos bonds separately
-    if (arsPrice && usdPrice && usdPrice > 0) {
+    const arsItem = map[pair.ars];
+    const usdItem = map[pair.usd];
+    const extItem = map[pair.ext];
+    const arsPrice = arsItem ? parseFloat(arsItem.c || arsItem.px_bid || 0) : null;
+    const usdPrice = usdItem ? parseFloat(usdItem.c || usdItem.px_bid || 0) : null;
+    const extPrice = extItem ? parseFloat(extItem.c || extItem.px_bid || 0) : null;
+    if (arsPrice > 0 && usdPrice > 0) {
       STATE.tcMep[pair.nombre] = arsPrice / usdPrice;
     }
-    const extPrice = (map[pair.usdC] && parseFloat(map[pair.usdC].last)) || null;
-    if (arsPrice && extPrice && extPrice > 0) {
+    if (arsPrice > 0 && extPrice > 0) {
       STATE.tcCable[pair.nombre] = arsPrice / extPrice;
     }
   }
@@ -833,7 +838,7 @@ function processLecaps(rawArr) {
   const map = priceMap(rawArr);
   STATE.lecapCalc = LECAP_DEFS.map(def => {
     const item = map[def.ticker.toUpperCase()];
-    const precio = item ? parseFloat(item.last || item.close || 0) : null;
+    const precio = item ? parseFloat(item.c || item.px_bid || 0) : null;
     if (!precio) return {...def, precio: null, tir:null, tem:null, tna:null, tePlazo:null, live:false};
     const {tir, tem, tna, tePlazo} = calcLecapMetrics(precio, def.vpv, def.dias);
     return {...def, precio, tir, tem, tna, tePlazo, live: true};
