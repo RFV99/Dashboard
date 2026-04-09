@@ -1,6 +1,7 @@
 exports.handler = async () => {
   try {
-    const res = await fetch("https://data912.com/live/arg_lecaps");
+    const res = await fetch("https://data912.com/live/arg_notes");
+    if (!res.ok) throw new Error(`HTTP ${res.status}`);
     const data = await res.json();
     return {
       statusCode: 200,
