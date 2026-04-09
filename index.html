@@ -845,16 +845,14 @@ function processLecaps(rawArr) {
   });
 }
 
-function processDolar(rawArr) {
-  // ArgentinaDatos returns [{casa, nombre, venta, compra, ...}]
-  if (!Array.isArray(rawArr)) return;
-  for (const d of rawArr) {
-    const n = (d.casa || d.nombre || '').toLowerCase();
-    if (n.includes('blue')) STATE.dolar.blue = parseFloat(d.venta);
-    if (n.includes('bolsa') || n.includes('mep')) STATE.dolar.mep = parseFloat(d.venta);
-    if (n.includes('contado') || n.includes('cable')) STATE.dolar.cable = parseFloat(d.venta);
-    if (n.includes('oficial')) STATE.dolar.oficial = parseFloat(d.venta);
-  }
+function processDolar(data) {
+  // Proxy now returns { blue:{compra,venta}, mep:{...}, cable:{...}, oficial:{...} }
+  if (!data || typeof data !== 'object') return;
+  if (data.blue)    STATE.dolar.blue    = parseFloat(data.blue.venta);
+  if (data.mep)     STATE.dolar.mep     = parseFloat(data.mep.venta);
+  if (data.cable)   STATE.dolar.cable   = parseFloat(data.cable.venta);
+  if (data.oficial) STATE.dolar.oficial = parseFloat(data.oficial.venta);
+  if (data.cripto)  STATE.dolar.cripto  = parseFloat(data.cripto.venta);
 }
 
 // ═══════════════════════════════════════════════════════════════
