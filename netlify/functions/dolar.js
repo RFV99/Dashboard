@@ -1,30 +1,32 @@
 exports.handler = async () => {
   try {
-    // api.argentinadatos.com/v1/cotizaciones/dolares — endpoint correcto
     const res = await fetch("https://api.argentinadatos.com/v1/cotizaciones/dolares");
     if (!res.ok) throw new Error(`HTTP ${res.status}`);
     const data = await res.json();
 
-    // Devuelve: [{ moneda, casa, fecha, compra, venta }]
-    // "casa" values: "blue", "oficial", "bolsa", "contadoconliquidacion", "cripto", "tarjeta", "mayorista"
-    const result = {};
-    if (Array.isArray(data)) {
-      // Toma el registro más reciente por casa (vienen ordenados por fecha desc)
-      const seen = new Set();
-      for (const d of data) {
-        const casa = (d.casa || "").toLowerCase();
-        if (seen.has(casa)) continue;
-        seen.add(casa);
-        const entry = { compra: d.compra, venta: d.venta, fecha: d.fecha };
-        if (casa === "blue")                      result.blue      = entry;
-        if (casa === "oficial")                   result.oficial   = entry;
-        if (casa === "bolsa")                     result.mep       = entry;
-        if (casa === "contadoconliquidacion")     result.cable     = entry;
-        if (casa === "cripto")                    result.cripto    = entry;
-        if (casa === "tarjeta")                   result.tarjeta   = entry;
-        if (casa === "mayorista")                 result.mayorista = entry;
+    // 29k registros históricos — tomar el más reciente por casa
+    // Vienen ordenados por fecha asc, así que iteramos de atrás
+    // y guardamos el primero (más reciente) que encontramos por casa
+    const latest = {};
+    for (let i = data.length - 1; i >= 0; i--) {
+      const d = data[i];
+      const casa = (d.casa || "").toLowerCase();
+      if (!latest[casa]) {
+        latest[casa] = { compra: d.compra, venta: d.venta, fecha: d.fecha };
       }
     }
+
+    // Mapear a nombres claros
+    // casas: "blue","oficial","bolsa","contadoconliqui","mayorista","cripto","tarjeta","solidario"
+    const result = {
+      blue:      latest["blue"]            || null,
+      oficial:   latest["oficial"]         || null,
+      mep:       latest["bolsa"]           || null,
+      cable:     latest["contadoconliqui"] || null,
+      mayorista: latest["mayorista"]       || null,
+      cripto:    latest["cripto"]          || null,
+      tarjeta:   latest["tarjeta"]         || null,
+    };
 
     return {
       statusCode: 200,
