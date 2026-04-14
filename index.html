@@ -258,18 +258,18 @@
       <div class="kpi-sub">ARS/USD</div>
     </div>
     <div class="kpi amber">
-      <div class="kpi-label">Canje · AL30</div>
-      <div style="display:flex;gap:12px;align-items:baseline;margin-top:2px;">
+      <div class="kpi-label">Canje</div>
+      <div style="display:flex;gap:16px;align-items:baseline;margin-top:4px;">
         <div>
-          <div style="font-size:9px;color:var(--muted);margin-bottom:1px;">IN</div>
+          <div style="font-size:9px;color:var(--muted);margin-bottom:2px;text-transform:uppercase;letter-spacing:.05em;">IN</div>
           <div class="kpi-value pos" id="k-canje-in" style="font-size:16px;">—</div>
         </div>
         <div>
-          <div style="font-size:9px;color:var(--muted);margin-bottom:1px;">OUT</div>
+          <div style="font-size:9px;color:var(--muted);margin-bottom:2px;text-transform:uppercase;letter-spacing:.05em;">OUT</div>
           <div class="kpi-value neg" id="k-canje-out" style="font-size:16px;">—</div>
         </div>
       </div>
-      <div class="kpi-sub">AL30D/AL30C − 1</div>
+      <div class="kpi-sub">en base a AL30</div>
     </div>
   </div>
 
@@ -937,8 +937,10 @@ function updateKPIs() {
   // Canje: IN = AL30D/AL30C - 1, OUT = AL30C/AL30D - 1
   const mepV   = mepAL30   || STATE.dolar.mep   || null;
   const cableV = cableAL30 || STATE.dolar.cable || null;
-  const canjeIn  = (mepV && cableV) ? (mepV / cableV - 1)   : null;
-  const canjeOut = (mepV && cableV) ? (cableV / mepV - 1)   : null;
+  // IN  = (Cable/MEP) - 1 → always positive (cable > mep)
+  // OUT = (MEP/Cable) - 1 → always negative
+  const canjeIn  = (mepV && cableV) ? (cableV / mepV - 1) : null;
+  const canjeOut = (mepV && cableV) ? (mepV / cableV - 1) : null;
 
   // Row 1
   set('k-rp',   STATE.riesgoPais ? Math.round(STATE.riesgoPais).toLocaleString('es-AR') : '—', 'neg');
@@ -1368,35 +1370,36 @@ async function loadHistChart(key) {
   if (srcEl) srcEl.textContent = 'Cargando...';
 
   try {
-    // data912 OHLC endpoint: /ohlc/{ticker}?period=1d&limit=N
-    const limit = Math.min(days, 2000);
-    const url = `https://data912.com/ohlc/${ticker}?period=1d&limit=${limit}`;
-    const res = await fetch(PROXY_URL + '/api/hist?ticker=' + encodeURIComponent(ticker) + '&limit=' + limit);
+    // data912 endpoint: /historical/bonds/{ticker}
+    // Returns array of [{date, close}] sorted oldest→newest
+    const res = await fetch(PROXY_URL + '/api/hist?ticker=' + encodeURIComponent(ticker));
     let rawData = null;
-    if (res.ok) {
-      rawData = await res.json();
-    }
+    if (res.ok) rawData = await res.json();
 
     if (!rawData || !Array.isArray(rawData) || rawData.length === 0) {
       if (srcEl) srcEl.textContent = 'Sin datos históricos';
-      // Show skeleton in chart
       if (histCharts[key]) { histCharts[key].destroy(); delete histCharts[key]; }
       return;
     }
 
-    // rawData: [{date, open, high, low, close, volume}] or [{t, c}]
+    // Filter to requested period
     const cutoff = new Date();
     cutoff.setDate(cutoff.getDate() - days);
-    const filtered = rawData.filter(d => {
-      const dt = new Date(d.date || d.t || d.timestamp);
-      return dt >= cutoff;
-    });
+    const filtered = days >= 9999
+      ? rawData
+      : rawData.filter(d => new Date(d.date || d.t || d.fecha || '') >= cutoff);
 
     const labels = filtered.map(d => {
-      const dt = new Date(d.date || d.t);
+      const raw = d.date || d.t || d.fecha || '';
+      const dt = new Date(raw);
+      // Format MM/YY for >180d, DD/MM for shorter
+      if (days > 180) return dt.toLocaleDateString('es-AR', {month:'2-digit', year:'2-digit'});
       return dt.toLocaleDateString('es-AR', {day:'2-digit', month:'2-digit'});
     });
-    const prices = filtered.map(d => parseFloat(d.close || d.c || 0));
+    const prices = filtered.map(d => {
+      const p = d.close ?? d.c ?? d.precio ?? d.price ?? d.value ?? 0;
+      return parseFloat(p) || null;
+    }).filter(p => p !== null);
 
     if (histCharts[key]) { histCharts[key].destroy(); delete histCharts[key]; }
     const isDark = matchMedia('(prefers-color-scheme: dark)').matches;
