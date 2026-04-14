@@ -1,7 +1,8 @@
-// Proxy para serie histórica OHLC de data912
-// GET /api/hist?ticker=AL30D&limit=365
+// Proxy para serie histórica de data912
+// data912 endpoint: GET /historical/bonds/{ticker}
+// Returns: [{date, close, open, high, low, volume}, ...]
 exports.handler = async (event) => {
-  const { ticker, limit = 365 } = event.queryStringParameters || {};
+  const { ticker } = event.queryStringParameters || {};
   if (!ticker) {
     return {
       statusCode: 400,
@@ -10,11 +11,9 @@ exports.handler = async (event) => {
     };
   }
   try {
-    const lim = Math.min(parseInt(limit) || 365, 2000);
-    // data912 OHLC endpoint
-    const url = `https://data912.com/ohlc/${encodeURIComponent(ticker)}?period=1d&limit=${lim}`;
+    const url = `https://data912.com/historical/bonds/${encodeURIComponent(ticker)}`;
     const res = await fetch(url);
-    if (!res.ok) throw new Error(`data912 HTTP ${res.status}`);
+    if (!res.ok) throw new Error(`data912 HTTP ${res.status} — ${url}`);
     const data = await res.json();
     return {
       statusCode: 200,
