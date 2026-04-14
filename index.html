@@ -193,6 +193,12 @@
   ::-webkit-scrollbar { width: 6px; height: 6px; }
   ::-webkit-scrollbar-track { background: transparent; }
   ::-webkit-scrollbar-thumb { background: var(--border2); border-radius: 3px; }
+  .hist-card { background:var(--bg2); border:1px solid var(--border); border-radius:10px; padding:1rem; margin-top:1rem; }
+  .hist-controls { display:flex; align-items:center; gap:.5rem; flex-wrap:wrap; margin-bottom:.75rem; }
+  .hist-select { background:var(--bg3); border:1px solid var(--border2); color:var(--text); padding:.35rem .6rem; border-radius:6px; font-size:12px; cursor:pointer; }
+  .period-btn { background:transparent; border:1px solid var(--border2); color:var(--muted); padding:.3rem .65rem; border-radius:6px; font-size:11px; font-weight:600; cursor:pointer; transition:all .15s; }
+  .period-btn.active,.period-btn:hover { background:var(--accent); border-color:var(--accent); color:#fff; }
+  .hist-loading { text-align:center; color:var(--muted); font-size:12px; padding:2rem; }
 </style>
 </head>
 <body>
@@ -234,36 +240,56 @@
 
   <div class="error-banner" id="err-banner"></div>
 
-  <!-- KPIs -->
-  <div class="kpi-grid" id="kpi-grid">
-    <div class="kpi accent"><div class="kpi-label">TIR prom. Bonares</div><div class="kpi-value neu" id="k-bon-tir">—</div><div class="kpi-sub">efectiva anual</div></div>
-    <div class="kpi teal"><div class="kpi-label">TIR prom. Globales</div><div class="kpi-value neu" id="k-glo-tir">—</div><div class="kpi-sub">efectiva anual</div></div>
-    <div class="kpi green"><div class="kpi-label">MEP (AL30)</div><div class="kpi-value neu" id="k-mep">—</div><div class="kpi-sub">ARS/USD</div></div>
-    <div class="kpi amber"><div class="kpi-label">Cable (AL30)</div><div class="kpi-value neu" id="k-cable">—</div><div class="kpi-sub">ARS/USD</div></div>
-    <div class="kpi purple"><div class="kpi-label">Dólar blue</div><div class="kpi-value neu" id="k-blue">—</div><div class="kpi-sub">venta</div></div>
-    <div class="kpi red"><div class="kpi-label">TEM LECAP media</div><div class="kpi-value neu" id="k-tem">—</div><div class="kpi-sub">mensual efectiva</div></div>
+  <!-- Fila 1: Riesgo País | MEP | Cable | Canje -->
+  <div class="kpi-grid" style="grid-template-columns:repeat(auto-fit,minmax(160px,1fr));margin-bottom:.75rem;">
+    <div class="kpi red">
+      <div class="kpi-label">Riesgo País</div>
+      <div class="kpi-value neg" id="k-rp">—</div>
+      <div class="kpi-sub">puntos básicos</div>
+    </div>
+    <div class="kpi green">
+      <div class="kpi-label">MEP · AL30</div>
+      <div class="kpi-value neu" id="k-mep">—</div>
+      <div class="kpi-sub">ARS/USD</div>
+    </div>
+    <div class="kpi teal">
+      <div class="kpi-label">Cable · AL30</div>
+      <div class="kpi-value neu" id="k-cable">—</div>
+      <div class="kpi-sub">ARS/USD</div>
+    </div>
+    <div class="kpi amber">
+      <div class="kpi-label">Canje · AL30</div>
+      <div style="display:flex;gap:12px;align-items:baseline;margin-top:2px;">
+        <div>
+          <div style="font-size:9px;color:var(--muted);margin-bottom:1px;">IN</div>
+          <div class="kpi-value pos" id="k-canje-in" style="font-size:16px;">—</div>
+        </div>
+        <div>
+          <div style="font-size:9px;color:var(--muted);margin-bottom:1px;">OUT</div>
+          <div class="kpi-value neg" id="k-canje-out" style="font-size:16px;">—</div>
+        </div>
+      </div>
+      <div class="kpi-sub">AL30D/AL30C − 1</div>
+    </div>
   </div>
 
-  <!-- TC strip -->
-  <div style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.07em;color:var(--muted);margin-bottom:.6rem;">
-    Tipos de cambio implícitos
-  </div>
-  <div class="tc-strip" id="tc-strip">
-    <div class="tc-card skeleton" style="height:90px"></div>
-    <div class="tc-card skeleton" style="height:90px"></div>
-    <div class="tc-card skeleton" style="height:90px"></div>
-    <div class="tc-card skeleton" style="height:90px"></div>
+  <!-- Fila 2: TIR promedios + TEM -->
+  <div class="kpi-grid" style="grid-template-columns:repeat(auto-fit,minmax(140px,1fr));margin-bottom:1.25rem;">
+    <div class="kpi accent"><div class="kpi-label">TIR prom. Globales</div><div class="kpi-value neu" id="k-glo-tir">—</div><div class="kpi-sub">efectiva anual</div></div>
+    <div class="kpi accent"><div class="kpi-label">TIR prom. Bonares</div><div class="kpi-value neu" id="k-bon-tir">—</div><div class="kpi-sub">efectiva anual</div></div>
+    <div class="kpi accent"><div class="kpi-label">TIR prom. Bopreales</div><div class="kpi-value neu" id="k-bop-tir">—</div><div class="kpi-sub">efectiva anual</div></div>
+    <div class="kpi purple"><div class="kpi-label">TEM media Lecaps</div><div class="kpi-value neu" id="k-tem">—</div><div class="kpi-sub">mensual efectiva</div></div>
   </div>
 
   <!-- Tabs -->
   <div class="tabs">
-    <button class="tab active" onclick="switchTab('harddollar',this)">Hard Dollar</button>
+    <button class="tab active" onclick="switchTab('curvas',this)">Curvas</button>
+    <button class="tab" onclick="switchTab('harddollar',this)">Hard Dollar</button>
     <button class="tab" onclick="switchTab('capitalizables',this)">Capitalizables</button>
     <button class="tab" onclick="switchTab('pesos',this)">Tasa fija $</button>
-    <button class="tab" onclick="switchTab('curvas',this)">Curvas</button>
   </div>
 
-  <div class="panel active" id="panel-harddollar">
+  <div class="panel" id="panel-harddollar">
     <div class="tbl-wrap"><table id="tbl-harddollar"><thead><tr>
       <th onclick="sortTable('harddollar',0)">Ticker ↕</th>
       <th onclick="sortTable('harddollar',1)">Precio ↕</th>
@@ -276,6 +302,20 @@
       <th onclick="sortTable('harddollar',8)">V. Res. ↕</th>
       <th onclick="sortTable('harddollar',9)">Paridad ↕</th>
     </tr></thead><tbody id="tbody-harddollar"></tbody></table></div>
+  <div class="hist-card">
+    <div class="hist-controls">
+      <select class="hist-select" id="hist-sel-hd" onchange="loadHistChart('hd')"></select>
+      <div style="display:flex;gap:4px;">
+        <button class="period-btn" onclick="setPeriod('hd','30d',this)">30d</button>
+        <button class="period-btn active" onclick="setPeriod('hd','90d',this)">90d</button>
+        <button class="period-btn" onclick="setPeriod('hd','1y',this)">1 año</button>
+        <button class="period-btn" onclick="setPeriod('hd','5y',this)">5 años</button>
+        <button class="period-btn" onclick="setPeriod('hd','all',this)">Todo</button>
+      </div>
+      <span style="font-size:10px;color:var(--muted)" id="hist-src-hd"></span>
+    </div>
+    <div class="chart-wrap" style="height:220px"><canvas id="c-hist-hd" role="img" aria-label="Serie histórica Hard Dollar"></canvas></div>
+  </div>
   </div>
 
   <div class="panel" id="panel-capitalizables">
@@ -290,6 +330,20 @@
       <th onclick="sortTable('capitalizables',7)">TEM ↕</th>
       <th onclick="sortTable('capitalizables',8)">TE al plazo ↕</th>
     </tr></thead><tbody id="tbody-capitalizables"></tbody></table></div>
+  <div class="hist-card">
+    <div class="hist-controls">
+      <select class="hist-select" id="hist-sel-cap" onchange="loadHistChart('cap')"></select>
+      <div style="display:flex;gap:4px;">
+        <button class="period-btn" onclick="setPeriod('cap','30d',this)">30d</button>
+        <button class="period-btn active" onclick="setPeriod('cap','90d',this)">90d</button>
+        <button class="period-btn" onclick="setPeriod('cap','1y',this)">1 año</button>
+        <button class="period-btn" onclick="setPeriod('cap','5y',this)">5 años</button>
+        <button class="period-btn" onclick="setPeriod('cap','all',this)">Todo</button>
+      </div>
+      <span style="font-size:10px;color:var(--muted)" id="hist-src-cap"></span>
+    </div>
+    <div class="chart-wrap" style="height:220px"><canvas id="c-hist-cap" role="img" aria-label="Serie histórica Capitalizables"></canvas></div>
+  </div>
   </div>
 
   <div class="panel" id="panel-pesos">
@@ -298,9 +352,23 @@
       <th>TNA</th><th>Mac. Dur.</th><th>Mod. Dur.</th><th>Convex.</th>
       <th>Val. Téc.</th><th>Paridad</th>
     </tr></thead><tbody id="tbody-pesos"></tbody></table></div>
+  <div class="hist-card">
+    <div class="hist-controls">
+      <select class="hist-select" id="hist-sel-pes" onchange="loadHistChart('pes')"></select>
+      <div style="display:flex;gap:4px;">
+        <button class="period-btn" onclick="setPeriod('pes','30d',this)">30d</button>
+        <button class="period-btn active" onclick="setPeriod('pes','90d',this)">90d</button>
+        <button class="period-btn" onclick="setPeriod('pes','1y',this)">1 año</button>
+        <button class="period-btn" onclick="setPeriod('pes','5y',this)">5 años</button>
+        <button class="period-btn" onclick="setPeriod('pes','all',this)">Todo</button>
+      </div>
+      <span style="font-size:10px;color:var(--muted)" id="hist-src-pes"></span>
+    </div>
+    <div class="chart-wrap" style="height:220px"><canvas id="c-hist-pes" role="img" aria-label="Serie histórica Tasa fija"></canvas></div>
+  </div>
   </div>
 
-  <div class="panel" id="panel-curvas">
+  <div class="panel active" id="panel-curvas">
     <div class="chart-grid">
       <div class="chart-card">
         <div class="chart-title">Curva Bonares — TIR vs Mod. Duration</div>
@@ -657,11 +725,13 @@ function calcLecapMetrics(precio, vpv, dias) {
 // STATE
 // ═══════════════════════════════════════════════════════════════
 let STATE = {
-  bonds: [],      // raw from data912 — used by both processBonds and processLecaps (BONCAPs)
+  bonds: [],
   lecaps: [],
   bonares: [], globales: [], bopreales: [], lecapCalc: [], pesos: [],
   tcMep: {}, tcCable: {},
   dolar: {},
+  riesgoPais: null,
+  _hdSorted: null,
   lastFetch: null,
 };
 
@@ -687,10 +757,11 @@ async function fetchAll() {
 
   try {
     // Fetch in parallel — bonds + lecaps + dólar
-    const [bondsRaw, lecapsRaw, dolarRaw] = await Promise.allSettled([
+    const [bondsRaw, lecapsRaw, dolarRaw, rpRaw] = await Promise.allSettled([
       proxyFetch('/api/bonds'),
       proxyFetch('/api/lecaps'),
       proxyFetch('/api/dolar'),
+      proxyFetch('/api/riesgo_pais'),
     ]);
 
     if (bondsRaw.status === 'fulfilled') {
@@ -713,15 +784,20 @@ async function fetchAll() {
       processDolar(STATE.dolar);
     }
 
+    if (rpRaw && rpRaw.status === 'fulfilled') {
+      const rp = rpRaw.value;
+      // argentinadatos returns { fecha, valor } for ultimo endpoint
+      STATE.riesgoPais = rp.valor ?? rp.value ?? rp.riesgoPais ?? null;
+    }
+
     STATE.lastFetch = new Date();
     updateTimestamp();
     setBadge('live');
     updateKPIs();
     renderTCStrip();
     renderAllTables();
-    if (document.getElementById('panel-curvas') && document.getElementById('panel-curvas').classList.contains('active')) {
-      buildCharts();
-    }
+    maybeRebuildCharts();
+    initHistCharts();
 
   } catch(e) {
     showError('Error de conexión: ' + e.message + '. ¿Está corriendo el proxy?');
@@ -789,6 +865,7 @@ function processBonds(rawArr) {
 
   // TC implícitos: MEP = arsPrice / usdPrice, Cable = arsPrice / extPrice
   computeTC(map);
+  STATE._hdSorted = null; // reset sort when new data arrives
 }
 
 function computeTC(map) {
@@ -848,22 +925,38 @@ const clr = (n, pos='pos') => !n || !isFinite(n) ? '' : (n > 0 ? pos : 'neg');
 function updateKPIs() {
   const bon = STATE.bonares.filter(b => b.tir && isFinite(b.tir));
   const glo = STATE.globales.filter(b => b.tir && isFinite(b.tir));
+  const bop = STATE.bopreales.filter(b => b.tir && isFinite(b.tir) && b.tir > 0);
   const lec = STATE.lecapCalc.filter(l => l.tem && isFinite(l.tem));
 
   const avg = arr => arr.length ? arr.reduce((s,b) => s+b,0)/arr.length : null;
   const avgBonTir = avg(bon.map(b=>b.tir));
   const avgGloTir = avg(glo.map(b=>b.tir));
+  const avgBopTir = avg(bop.map(b=>b.tir));
   const avgTem = avg(lec.map(l=>l.tem));
 
-  // MEP from AL30 computed TC, fallback to argentinadatos
-  const mepAL30 = STATE.tcMep['AL30'];
+  // MEP / Cable from AL30 implicit TC
+  const mepAL30   = STATE.tcMep['AL30'];
   const cableAL30 = STATE.tcCable['AL30'];
+  // Canje: IN = AL30D/AL30C - 1, OUT = AL30C/AL30D - 1
+  const mepV   = mepAL30   || STATE.dolar.mep   || null;
+  const cableV = cableAL30 || STATE.dolar.cable || null;
+  const canjeIn  = (mepV && cableV) ? (mepV / cableV - 1)   : null;
+  const canjeOut = (mepV && cableV) ? (cableV / mepV - 1)   : null;
 
-  set('k-bon-tir', pct(avgBonTir), avgBonTir > 0.09 ? 'neg' : 'pos');
+  // Row 1
+  set('k-rp',   STATE.riesgoPais ? Math.round(STATE.riesgoPais).toLocaleString('es-AR') : '—', 'neg');
+  set('k-mep',  mepV   ? ars(mepV)   : '—');
+  set('k-cable',cableV ? ars(cableV) : '—');
+
+  const ciEl = document.getElementById('k-canje-in');
+  const coEl = document.getElementById('k-canje-out');
+  if (ciEl) ciEl.textContent = canjeIn  != null ? (canjeIn*100).toFixed(2)+'%'  : '—';
+  if (coEl) coEl.textContent = canjeOut != null ? (canjeOut*100).toFixed(2)+'%' : '—';
+
+  // Row 2
   set('k-glo-tir', pct(avgGloTir), avgGloTir > 0.09 ? 'neg' : 'pos');
-  set('k-mep', mepAL30 ? ars(mepAL30) : (STATE.dolar.mep ? ars(STATE.dolar.mep) : '—'));
-  set('k-cable', cableAL30 ? ars(cableAL30) : (STATE.dolar.cable ? ars(STATE.dolar.cable) : '—'));
-  set('k-blue', STATE.dolar.blue ? ars(STATE.dolar.blue) : '—');
+  set('k-bon-tir', pct(avgBonTir), avgBonTir > 0.09 ? 'neg' : 'pos');
+  set('k-bop-tir', pct(avgBopTir), avgBopTir > 0.09 ? 'neg' : 'pos');
   set('k-tem', pct3(avgTem));
 }
 
@@ -915,12 +1008,15 @@ function renderBondTable(tbodyId, data, tag) {
 }
 
 function renderAllTables() {
-  // Hard Dollar: merge bonares + globales + bopreales, sort by TIR asc
-  const allHD = [
-    ...STATE.bonares.map(b => ({...b, _tag:'tag-bon'})),
-    ...STATE.globales.map(b => ({...b, _tag:'tag-glo'})),
-    ...STATE.bopreales.map(b => ({...b, _tag:'tag-bop'})),
-  ].sort((a, b) => (a.tir || 0) - (b.tir || 0));
+  // Hard Dollar: use user-sorted list if available, else default TIR asc
+  let allHD = STATE._hdSorted;
+  if (!allHD) {
+    allHD = [
+      ...STATE.bonares.map(b => ({...b, _tag:'tag-bon'})),
+      ...STATE.globales.map(b => ({...b, _tag:'tag-glo'})),
+      ...STATE.bopreales.map(b => ({...b, _tag:'tag-bop'})),
+    ].sort((a, b) => (a.tir || 0) - (b.tir || 0));
+  }
   renderHardDollarTable('tbody-harddollar', allHD);
   renderCapitalizablesTable();
   renderPesosTable();
@@ -1124,6 +1220,12 @@ function switchTab(id, el) {
   if (id === 'curvas') setTimeout(buildCharts, 50);
 }
 
+// buildCharts when curvas panel becomes visible after data loads
+function maybeRebuildCharts() {
+  const p = document.getElementById('panel-curvas');
+  if (p && p.classList.contains('active')) buildCharts();
+}
+
 // Also keep old tab ids working for any residual calls
 function switchTabLegacy(id, el) { switchTab(id, el); }
 
@@ -1151,17 +1253,14 @@ function sortTable(key, colIdx) {
     const hdKeys = ['ticker','precio','tir','tna','macaulay','modified','convex','vt','vr','paridad'];
     const k = hdKeys[colIdx];
     const dir = getDir(key, colIdx);
-    // Merge all three, sort, then split back preserving grupo
     const all = [
       ...STATE.bonares.map(b => ({...b, _tag:'tag-bon'})),
       ...STATE.globales.map(b => ({...b, _tag:'tag-glo'})),
       ...STATE.bopreales.map(b => ({...b, _tag:'tag-bop'})),
     ];
     sortArr(all, k, dir);
-    // Redistribute sorted items back into their state arrays
-    STATE.bonares   = all.filter(b => b._tag === 'tag-bon');
-    STATE.globales  = all.filter(b => b._tag === 'tag-glo');
-    STATE.bopreales = all.filter(b => b._tag === 'tag-bop');
+    // Store sorted merged list so renderHardDollarTable uses it directly
+    STATE._hdSorted = all;
     renderAllTables();
     return;
   }
@@ -1215,6 +1314,155 @@ function toggleProxy() {
 
 // Auto-refresh cada 5 minutos
 setInterval(() => { if (STATE.lastFetch) fetchAll(); }, 5 * 60 * 1000);
+
+// ═══════════════════════════════════════════════════════════════
+// HISTORICAL CHARTS
+// ═══════════════════════════════════════════════════════════════
+const HIST_PERIODS = { '30d':30, '90d':90, '1y':365, '5y':1825, 'all':99999 };
+const histState = {
+  hd:  { period:'90d', ticker: null },
+  cap: { period:'90d', ticker: null },
+  pes: { period:'90d', ticker: null },
+};
+const histCharts = {};
+
+// Map tab key → list of tickers
+function histTickers(key) {
+  if (key === 'hd')  return [...STATE.bonares,...STATE.globales,...STATE.bopreales].map(b=>b.ticker);
+  if (key === 'cap') return STATE.lecapCalc.map(l=>l.ticker);
+  if (key === 'pes') return STATE.pesos.map(p=>p.ticker);
+  return [];
+}
+
+function populateHistSelects() {
+  ['hd','cap','pes'].forEach(key => {
+    const sel = document.getElementById('hist-sel-'+key);
+    if (!sel) return;
+    const tickers = histTickers(key);
+    if (!tickers.length) return;
+    const prev = histState[key].ticker;
+    sel.innerHTML = tickers.map(t => `<option value="${t}"${t===prev?' selected':''}>${t}</option>`).join('');
+    if (!histState[key].ticker) histState[key].ticker = tickers[0];
+  });
+}
+
+function setPeriod(key, period, btn) {
+  histState[key].period = period;
+  // Update button styles within the same controls div
+  btn.closest('.hist-controls').querySelectorAll('.period-btn').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+  loadHistChart(key);
+}
+
+async function loadHistChart(key) {
+  const ticker = document.getElementById('hist-sel-'+key)?.value || histState[key].ticker;
+  if (!ticker) return;
+  histState[key].ticker = ticker;
+  const period = histState[key].period;
+  const days = HIST_PERIODS[period];
+  const srcEl = document.getElementById('hist-src-'+key);
+  const canvasId = 'c-hist-'+key;
+  const canvas = document.getElementById(canvasId);
+  if (!canvas) return;
+
+  // Show loading
+  if (srcEl) srcEl.textContent = 'Cargando...';
+
+  try {
+    // data912 OHLC endpoint: /ohlc/{ticker}?period=1d&limit=N
+    const limit = Math.min(days, 2000);
+    const url = `https://data912.com/ohlc/${ticker}?period=1d&limit=${limit}`;
+    const res = await fetch(PROXY_URL + '/api/hist?ticker=' + encodeURIComponent(ticker) + '&limit=' + limit);
+    let rawData = null;
+    if (res.ok) {
+      rawData = await res.json();
+    }
+
+    if (!rawData || !Array.isArray(rawData) || rawData.length === 0) {
+      if (srcEl) srcEl.textContent = 'Sin datos históricos';
+      // Show skeleton in chart
+      if (histCharts[key]) { histCharts[key].destroy(); delete histCharts[key]; }
+      return;
+    }
+
+    // rawData: [{date, open, high, low, close, volume}] or [{t, c}]
+    const cutoff = new Date();
+    cutoff.setDate(cutoff.getDate() - days);
+    const filtered = rawData.filter(d => {
+      const dt = new Date(d.date || d.t || d.timestamp);
+      return dt >= cutoff;
+    });
+
+    const labels = filtered.map(d => {
+      const dt = new Date(d.date || d.t);
+      return dt.toLocaleDateString('es-AR', {day:'2-digit', month:'2-digit'});
+    });
+    const prices = filtered.map(d => parseFloat(d.close || d.c || 0));
+
+    if (histCharts[key]) { histCharts[key].destroy(); delete histCharts[key]; }
+    const isDark = matchMedia('(prefers-color-scheme: dark)').matches;
+    const gridColor = isDark ? 'rgba(255,255,255,.05)' : 'rgba(0,0,0,.05)';
+    const tickColor = isDark ? '#7a8099' : '#888';
+    const lineColor = key === 'hd' ? '#4f8ef7' : key === 'cap' ? '#a78bfa' : '#34d399';
+
+    histCharts[key] = new Chart(canvas, {
+      type: 'line',
+      data: {
+        labels,
+        datasets: [{
+          label: ticker,
+          data: prices,
+          borderColor: lineColor,
+          borderWidth: 1.5,
+          pointRadius: filtered.length > 120 ? 0 : 2,
+          pointHoverRadius: 4,
+          fill: false,
+          tension: 0.1,
+        }]
+      },
+      options: {
+        responsive: true, maintainAspectRatio: false,
+        plugins: {
+          legend: { display: false },
+          tooltip: { callbacks: { label: ctx => `${ticker}: ${ctx.parsed.y?.toFixed(2)}` } }
+        },
+        scales: {
+          x: { grid:{color:gridColor}, ticks:{color:tickColor,font:{size:9},maxTicksLimit:8,maxRotation:0} },
+          y: { grid:{color:gridColor}, ticks:{color:tickColor,font:{size:10}}, position:'right' }
+        }
+      }
+    });
+    if (srcEl) srcEl.textContent = `${filtered.length} ruedas · data912`;
+  } catch(e) {
+    if (srcEl) srcEl.textContent = 'Error: ' + e.message;
+  }
+}
+
+function initHistCharts() {
+  populateHistSelects();
+  // Load chart for active tab on data arrival
+  const activePanel = document.querySelector('.panel.active');
+  if (!activePanel) return;
+  if (activePanel.id === 'panel-harddollar') loadHistChart('hd');
+  else if (activePanel.id === 'panel-capitalizables') loadHistChart('cap');
+  else if (activePanel.id === 'panel-pesos') loadHistChart('pes');
+}
+
+// Hook into switchTab to load chart when tab becomes visible
+const _origSwitchTab = switchTab;
+// Override via event delegation on tabs instead
+document.addEventListener('click', e => {
+  const btn = e.target.closest('.tab');
+  if (!btn) return;
+  // After switchTab runs, check if a hist panel is now active
+  setTimeout(() => {
+    const ap = document.querySelector('.panel.active');
+    if (!ap) return;
+    if (ap.id === 'panel-harddollar')    { populateHistSelects(); loadHistChart('hd'); }
+    else if (ap.id === 'panel-capitalizables') { populateHistSelects(); loadHistChart('cap'); }
+    else if (ap.id === 'panel-pesos')    { populateHistSelects(); loadHistChart('pes'); }
+  }, 80);
+});
 
 // Auto-fetch on page load
 document.addEventListener('DOMContentLoaded', () => { fetchAll(); });
