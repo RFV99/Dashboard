@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Dashboard Soberanos ARG</title>
+<title>ARGBoard</title>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.js"></script>
 <style>
   :root {
@@ -200,7 +200,7 @@
 <!-- ══════════════════════════════════════════ HEADER -->
 <header class="header">
   <div class="header-left">
-    <div class="logo">Soberanos<span>ARG</span></div>
+    <div class="logo">ARG<span>Board</span></div>
     <div class="badge-live badge-stale" id="live-badge">
       <span class="dot"></span>
       <span id="live-text">Sin datos</span>
@@ -322,6 +322,13 @@
   </div>
 
 </main>
+
+<footer style="text-align:center;padding:.75rem 1.5rem 1.5rem;font-size:10px;color:var(--muted);letter-spacing:.04em;">
+  Fuentes: <a href="https://data912.com" target="_blank" style="color:var(--muted);text-decoration:none;">Data912</a>
+  &nbsp;·&nbsp;
+  <a href="https://argentinadatos.com" target="_blank" style="color:var(--muted);text-decoration:none;">ArgentinaDatos</a>
+  &nbsp;·&nbsp; Datos con fines educativos, no en tiempo real.
+</footer>
 
 <script>
 // ═══════════════════════════════════════════════════════════════
@@ -1120,36 +1127,61 @@ function switchTab(id, el) {
 // Also keep old tab ids working for any residual calls
 function switchTabLegacy(id, el) { switchTab(id, el); }
 
+// sortState: { [key]: { col, dir } }
 let sortState = {};
+
+function getDir(key, colIdx) {
+  const s = sortState[key];
+  // same column clicked → reverse; new column → ascending
+  const dir = (s && s.col === colIdx) ? -s.dir : 1;
+  sortState[key] = { col: colIdx, dir };
+  return dir;
+}
+
+function sortArr(arr, k, dir) {
+  arr.sort((a, b) => {
+    const av = a[k] ?? 0, bv = b[k] ?? 0;
+    if (typeof av === 'string') return dir * av.localeCompare(bv);
+    return dir * (av - bv);
+  });
+}
+
 function sortTable(key, colIdx) {
   if (key === 'harddollar') {
-    // Sort the combined hard dollar state arrays
     const hdKeys = ['ticker','precio','tir','tna','macaulay','modified','convex','vt','vr','paridad'];
     const k = hdKeys[colIdx];
-    const dir = (sortState[key] === colIdx) ? -1 : 1;
-    sortState[key] = (sortState[key] === colIdx) ? null : colIdx;
-    [STATE.bonares, STATE.globales, STATE.bopreales].forEach(arr => {
-      arr.sort((a,b) => dir * ((a[k]||0) > (b[k]||0) ? 1 : -1));
-    });
+    const dir = getDir(key, colIdx);
+    // Merge all three, sort, then split back preserving grupo
+    const all = [
+      ...STATE.bonares.map(b => ({...b, _tag:'tag-bon'})),
+      ...STATE.globales.map(b => ({...b, _tag:'tag-glo'})),
+      ...STATE.bopreales.map(b => ({...b, _tag:'tag-bop'})),
+    ];
+    sortArr(all, k, dir);
+    // Redistribute sorted items back into their state arrays
+    STATE.bonares   = all.filter(b => b._tag === 'tag-bon');
+    STATE.globales  = all.filter(b => b._tag === 'tag-glo');
+    STATE.bopreales = all.filter(b => b._tag === 'tag-bop');
     renderAllTables();
     return;
   }
   if (key === 'capitalizables') {
     const capKeys = ['ticker','vto','dias','precio','vpv','tir','tna','tem','tePlazo'];
     const k = capKeys[colIdx];
-    const dir = (sortState[key] === colIdx) ? -1 : 1;
-    sortState[key] = (sortState[key] === colIdx) ? null : colIdx;
-    STATE.lecapCalc.sort((a,b) => dir * ((a[k]||0) > (b[k]||0) ? 1 : -1));
+    const dir = getDir(key, colIdx);
+    sortArr(STATE.lecapCalc, k, dir);
     renderAllTables();
     return;
   }
-  const data = key === 'bonares' ? STATE.bonares : key === 'globales' ? STATE.globales : key === 'bopreales' ? STATE.bopreales : [];
+  // Legacy fallback for any direct array access
+  const data = key === 'bonares' ? STATE.bonares
+             : key === 'globales' ? STATE.globales
+             : key === 'bopreales' ? STATE.bopreales : [];
   if (!data.length) return;
-  const dir = (sortState[key] === colIdx) ? -1 : 1;
-  sortState[key] = (sortState[key] === colIdx) ? null : colIdx;
   const keys = ['ticker','precio','tir','tna','macaulay','modified','convex','vt','vr','paridad'];
   const k = keys[colIdx];
-  data.sort((a,b) => dir * ((a[k]||0) > (b[k]||0) ? 1 : -1));
+  const dir = getDir(key, colIdx);
+  sortArr(data, k, dir);
   renderAllTables();
 }
 
@@ -1183,6 +1215,9 @@ function toggleProxy() {
 
 // Auto-refresh cada 5 minutos
 setInterval(() => { if (STATE.lastFetch) fetchAll(); }, 5 * 60 * 1000);
+
+// Auto-fetch on page load
+document.addEventListener('DOMContentLoaded', () => { fetchAll(); });
 
 // Spin animation
 const style = document.createElement('style');
