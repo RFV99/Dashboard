@@ -5,6 +5,8 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>ARGBoard</title>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/chartjs-adapter-date-fns@3/dist/chartjs-adapter-date-fns.bundle.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/chartjs-chart-financial@0.2.1/dist/chartjs-chart-financial.min.js"></script>
 <style>
   :root {
     --bg: #0d0f14;
@@ -330,20 +332,6 @@
       <th onclick="sortTable('capitalizables',7)">TEM ↕</th>
       <th onclick="sortTable('capitalizables',8)">TE al plazo ↕</th>
     </tr></thead><tbody id="tbody-capitalizables"></tbody></table></div>
-  <div class="hist-card">
-    <div class="hist-controls">
-      <select class="hist-select" id="hist-sel-cap" onchange="loadHistChart('cap')"></select>
-      <div style="display:flex;gap:4px;">
-        <button class="period-btn" onclick="setPeriod('cap','30d',this)">30d</button>
-        <button class="period-btn active" onclick="setPeriod('cap','90d',this)">90d</button>
-        <button class="period-btn" onclick="setPeriod('cap','1y',this)">1 año</button>
-        <button class="period-btn" onclick="setPeriod('cap','5y',this)">5 años</button>
-        <button class="period-btn" onclick="setPeriod('cap','all',this)">Todo</button>
-      </div>
-      <span style="font-size:10px;color:var(--muted)" id="hist-src-cap"></span>
-    </div>
-    <div class="chart-wrap" style="height:220px"><canvas id="c-hist-cap" role="img" aria-label="Serie histórica Capitalizables"></canvas></div>
-  </div>
   </div>
 
   <div class="panel" id="panel-pesos">
@@ -392,10 +380,10 @@
 </main>
 
 <footer style="text-align:center;padding:.75rem 1.5rem 1.5rem;font-size:10px;color:var(--muted);letter-spacing:.04em;">
-  Fuentes: Data912
+  Fuentes: <a href="https://data912.com" target="_blank" style="color:var(--muted);text-decoration:none;">Data912</a>
   &nbsp;·&nbsp;
-  ArgentinaDatos
-  &nbsp;·&nbsp; Datos con fines educativos.
+  <a href="https://argentinadatos.com" target="_blank" style="color:var(--muted);text-decoration:none;">ArgentinaDatos</a>
+  &nbsp;·&nbsp; Datos con fines educativos, no en tiempo real.
 </footer>
 
 <script>
@@ -1327,16 +1315,33 @@ const histState = {
 };
 const histCharts = {};
 
-// Map tab key → list of tickers
+// Tickers available in data912 historical endpoint
+const DATA912_HIST = new Set(['AE38', 'AE38D', 'AL29', 'AL29D', 'AL30', 'AL30C', 'AL30D', 'AL35', 'AL35D', 'AL41', 'AL41D', 'BA37D', 'BB37D', 'BC37D', 'BDC28', 'BPY26', 'CO26', 'CO26D', 'CUAP', 'DICP', 'DIP0', 'GD29', 'GD29D', 'GD30', 'GD30C', 'GD30D', 'GD35', 'GD35D', 'GD38', 'GD38D', 'GD41', 'GD41D', 'GD46', 'GD46D', 'NDT25', 'PAP0', 'PARP', 'PBA25', 'T2X5', 'TDE25', 'TO26', 'TVPA', 'TVPE', 'TVPP', 'TVPY', 'TX25', 'TX26', 'TX28']);
+
+// Tickers per tab filtered to data912 availability
+const HD_HIST_TICKERS  = ['AE38D', 'AL29D', 'AL30D', 'AL35D', 'AL41D', 'GD29D', 'GD30D', 'GD35D', 'GD38D', 'GD41D', 'GD46D', 'AE38', 'AL29', 'AL30', 'AL35', 'AL41', 'GD29', 'GD30', 'GD35', 'GD38', 'GD41', 'GD46'];
+const PES_HIST_TICKERS = ['TO26'];
+
 function histTickers(key) {
-  if (key === 'hd')  return [...STATE.bonares,...STATE.globales,...STATE.bopreales].map(b=>b.ticker);
-  if (key === 'cap') return STATE.lecapCalc.map(l=>l.ticker);
-  if (key === 'pes') return STATE.pesos.map(p=>p.ticker);
+  if (key === 'hd') {
+    // Use bond state tickers that exist in data912, preserving order
+    const stateTickers = [...STATE.bonares,...STATE.globales,...STATE.bopreales].map(b=>b.ticker);
+    const filtered = stateTickers.filter(t => DATA912_HIST.has(t) || DATA912_HIST.has(t.replace('D','')));
+    // Supplement with known available ones not yet in state
+    const extra = HD_HIST_TICKERS.filter(t => !filtered.includes(t));
+    return filtered.length ? filtered : HD_HIST_TICKERS;
+  }
+  if (key === 'pes') {
+    const stateTickers = STATE.pesos.map(p => p.ticker);
+    return stateTickers.filter(t => DATA912_HIST.has(t)).length
+      ? stateTickers.filter(t => DATA912_HIST.has(t))
+      : PES_HIST_TICKERS;
+  }
   return [];
 }
 
 function populateHistSelects() {
-  ['hd','cap','pes'].forEach(key => {
+  ['hd','pes'].forEach(key => {
     const sel = document.getElementById('hist-sel-'+key);
     if (!sel) return;
     const tickers = histTickers(key);
@@ -1403,38 +1408,67 @@ async function loadHistChart(key) {
 
     if (histCharts[key]) { histCharts[key].destroy(); delete histCharts[key]; }
     const isDark = matchMedia('(prefers-color-scheme: dark)').matches;
-    const gridColor = isDark ? 'rgba(255,255,255,.05)' : 'rgba(0,0,0,.05)';
+    const gridColor = isDark ? 'rgba(255,255,255,.05)' : 'rgba(0,0,0,.06)';
     const tickColor = isDark ? '#7a8099' : '#888';
-    const lineColor = key === 'hd' ? '#4f8ef7' : key === 'cap' ? '#a78bfa' : '#34d399';
+
+    // Build candlestick data: {x: timestamp, o, h, l, c}
+    const candleData = filtered.map(d => {
+      const ts = new Date(d.date || d.t || d.fecha || '').getTime();
+      const o = parseFloat(d.open  ?? d.o ?? d.close ?? d.c ?? 0);
+      const h = parseFloat(d.high  ?? d.h ?? d.close ?? d.c ?? 0);
+      const l = parseFloat(d.low   ?? d.l ?? d.close ?? d.c ?? 0);
+      const c = parseFloat(d.close ?? d.c ?? 0);
+      return {x: ts, o, h, l, c};
+    }).filter(d => d.c > 0);
 
     histCharts[key] = new Chart(canvas, {
-      type: 'line',
+      type: 'candlestick',
       data: {
-        labels,
         datasets: [{
           label: ticker,
-          data: prices,
-          borderColor: lineColor,
-          borderWidth: 1.5,
-          pointRadius: filtered.length > 120 ? 0 : 2,
-          pointHoverRadius: 4,
-          fill: false,
-          tension: 0.1,
+          data: candleData,
+          color: {
+            up:   '#34d399',
+            down: '#f87171',
+            unchanged: '#7a8099',
+          },
+          borderColor: {
+            up:   '#34d399',
+            down: '#f87171',
+            unchanged: '#7a8099',
+          },
         }]
       },
       options: {
         responsive: true, maintainAspectRatio: false,
         plugins: {
           legend: { display: false },
-          tooltip: { callbacks: { label: ctx => `${ticker}: ${ctx.parsed.y?.toFixed(2)}` } }
+          tooltip: {
+            callbacks: {
+              label: ctx => {
+                const d = ctx.raw;
+                return [`O: ${d.o?.toFixed(2)}  H: ${d.h?.toFixed(2)}  L: ${d.l?.toFixed(2)}  C: ${d.c?.toFixed(2)}`];
+              }
+            }
+          }
         },
         scales: {
-          x: { grid:{color:gridColor}, ticks:{color:tickColor,font:{size:9},maxTicksLimit:8,maxRotation:0} },
-          y: { grid:{color:gridColor}, ticks:{color:tickColor,font:{size:10}}, position:'right' }
+          x: {
+            type: 'timeseries',
+            time: { unit: days <= 90 ? 'day' : days <= 365 ? 'week' : 'month',
+                    displayFormats: { day:'dd/MM', week:'dd/MM', month:'MM/yy' } },
+            grid: { color: gridColor },
+            ticks: { color: tickColor, font:{size:9}, maxTicksLimit: 8, maxRotation: 0 }
+          },
+          y: {
+            grid: { color: gridColor },
+            ticks: { color: tickColor, font:{size:10} },
+            position: 'right'
+          }
         }
       }
     });
-    if (srcEl) srcEl.textContent = `${filtered.length} ruedas · data912`;
+    if (srcEl) srcEl.textContent = `${candleData.length} ruedas · data912`;
   } catch(e) {
     if (srcEl) srcEl.textContent = 'Error: ' + e.message;
   }
@@ -1446,7 +1480,6 @@ function initHistCharts() {
   const activePanel = document.querySelector('.panel.active');
   if (!activePanel) return;
   if (activePanel.id === 'panel-harddollar') loadHistChart('hd');
-  else if (activePanel.id === 'panel-capitalizables') loadHistChart('cap');
   else if (activePanel.id === 'panel-pesos') loadHistChart('pes');
 }
 
@@ -1461,7 +1494,6 @@ document.addEventListener('click', e => {
     const ap = document.querySelector('.panel.active');
     if (!ap) return;
     if (ap.id === 'panel-harddollar')    { populateHistSelects(); loadHistChart('hd'); }
-    else if (ap.id === 'panel-capitalizables') { populateHistSelects(); loadHistChart('cap'); }
     else if (ap.id === 'panel-pesos')    { populateHistSelects(); loadHistChart('pes'); }
   }, 80);
 });
