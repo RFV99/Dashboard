@@ -750,9 +750,8 @@ async function proxyFetch(endpoint) {
 async function fetchAll() {
   const btn = document.getElementById('refresh-btn');
   const spin = document.getElementById('spin');
-  btn.disabled = true;
-  spin.textContent = '⟳';
-  spin.style.animation = 'spin 1s linear infinite';
+  if (btn) btn.disabled = true;
+  if (spin) { spin.textContent = '⟳'; spin.style.animation = 'spin 1s linear infinite'; }
   hideError();
 
   try {
@@ -794,7 +793,6 @@ async function fetchAll() {
     updateTimestamp();
     setBadge('live');
     updateKPIs();
-    renderTCStrip();
     renderAllTables();
     maybeRebuildCharts();
     initHistCharts();
@@ -803,9 +801,8 @@ async function fetchAll() {
     showError('Error de conexión: ' + e.message + '. ¿Está corriendo el proxy?');
     setBadge('stale');
   } finally {
-    btn.disabled = false;
-    spin.textContent = '↻';
-    spin.style.animation = '';
+    if (btn) btn.disabled = false;
+    if (spin) { spin.textContent = '↻'; spin.style.animation = ''; }
   }
 }
 
@@ -969,6 +966,7 @@ function set(id, val, cls='') {
 
 function renderTCStrip() {
   const strip = document.getElementById('tc-strip');
+  if (!strip) return; // tc-strip removed from layout — skip silently
   const tickers = ['AL30','GD30','AL35','GD35','AL41','GD41','AE38','GD46'];
   const shown = tickers.filter(t => STATE.tcMep[t] || STATE.tcCable[t]);
   if (!shown.length) return;
@@ -1300,6 +1298,7 @@ function updateTimestamp() {
 
 function showError(msg) {
   const el = document.getElementById('err-banner');
+  if (!el) { console.error('Dashboard error:', msg); return; }
   el.textContent = '⚠ ' + msg;
   el.style.display = 'block';
 }
@@ -1465,7 +1464,10 @@ document.addEventListener('click', e => {
 });
 
 // Auto-fetch on page load
-document.addEventListener('DOMContentLoaded', () => { fetchAll(); });
+document.addEventListener('DOMContentLoaded', () => {
+  // Small delay ensures all DOM elements are fully parsed
+  setTimeout(fetchAll, 100);
+});
 
 // Spin animation
 const style = document.createElement('style');
